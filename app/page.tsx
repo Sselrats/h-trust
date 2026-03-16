@@ -107,8 +107,11 @@ export default function Home() {
           `[data-step=\"${currentStep}\"]`,
         );
         if (target) {
+          const container = stepScrollRef.current;
+          const targetCenter = target.offsetLeft + target.offsetWidth / 2;
+          const containerCenter = container.clientWidth / 2;
           stepScrollRef.current.scrollTo({
-            left: Math.max(0, target.offsetLeft - 8),
+            left: Math.max(0, targetCenter - containerCenter),
             behavior: "smooth",
           });
         }

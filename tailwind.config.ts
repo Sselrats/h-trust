@@ -5,6 +5,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        brand: {
+          100: "#FFF2E9",
+          200: "#FFDABF",
+          500: "#F37321",
+          700: "#C85A13"
+        },
         navy: {
           900: "#0A1C3A",
           700: "#17386B"

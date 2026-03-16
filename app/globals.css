@@ -9,8 +9,14 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 8% 12%, rgba(243, 115, 33, 0.12), transparent 38%),
-    radial-gradient(circle at 92% 90%, rgba(23, 56, 107, 0.08), transparent 34%),
-    linear-gradient(160deg, #f8fbff 0%, #f4f8ff 56%, #eff5ff 100%);
+  background: #f6f8fc;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }

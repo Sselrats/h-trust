@@ -15,11 +15,23 @@ import type { ScenarioKey, StepNumber } from "./components/steps/types";
 const cardMotion = {
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.35, ease: "easeOut" }
+  transition: { duration: 0.35, ease: "easeOut" },
+};
+
+const stepTitles: Record<StepNumber, string> = {
+  1: "Scenario 선택",
+  2: "Customer Submission",
+  3: "Domain AI 분석",
+  4: "Trust Layer - Draft&Citation LLM",
+  5: "Trust Layer - Red Team LLM",
+  6: "Human Review",
+  7: "Customer Delivery",
 };
 
 export default function Home() {
-  const [selectedScenario, setSelectedScenario] = useState<ScenarioKey | null>(null);
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioKey | null>(
+    null,
+  );
   const [currentStep, setCurrentStep] = useState<StepNumber>(1);
   const [submitted, setSubmitted] = useState(false);
   const [domainReady, setDomainReady] = useState(false);
@@ -29,11 +41,10 @@ export default function Home() {
 
   const timersRef = useRef<number[]>([]);
   const stepScrollRef = useRef<HTMLDivElement | null>(null);
-  const lastStepRef = useRef<HTMLDivElement | null>(null);
 
   const scenario = useMemo(
     () => (selectedScenario ? scenarioMap[selectedScenario] : null),
-    [selectedScenario]
+    [selectedScenario],
   );
 
   const clearTimers = useCallback(() => {
@@ -57,25 +68,25 @@ export default function Home() {
   useEffect(() => {
     if (currentStep === 3) {
       setDomainReady(false);
-      const timer = window.setTimeout(() => setDomainReady(true), 1200);
+      const timer = window.setTimeout(() => setDomainReady(true), 5000);
       timersRef.current.push(timer);
     }
 
     if (currentStep === 4) {
       setAgent1Ready(false);
-      const timer = window.setTimeout(() => setAgent1Ready(true), 1200);
+      const timer = window.setTimeout(() => setAgent1Ready(true), 5000);
       timersRef.current.push(timer);
     }
 
     if (currentStep === 5) {
       setAgent2Ready(false);
-      const timer = window.setTimeout(() => setAgent2Ready(true), 1200);
+      const timer = window.setTimeout(() => setAgent2Ready(true), 5000);
       timersRef.current.push(timer);
     }
 
     if (currentStep === 6) {
       setHumanReady(false);
-      const timer = window.setTimeout(() => setHumanReady(true), 1200);
+      const timer = window.setTimeout(() => setHumanReady(true), 1600);
       timersRef.current.push(timer);
     }
   }, [currentStep]);
@@ -91,10 +102,16 @@ export default function Home() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      if (lastStepRef.current) {
-        lastStepRef.current.scrollIntoView({ behavior: "smooth", inline: "end", block: "nearest" });
-      } else if (stepScrollRef.current) {
-        stepScrollRef.current.scrollTo({ left: stepScrollRef.current.scrollWidth, behavior: "smooth" });
+      if (stepScrollRef.current) {
+        const target = stepScrollRef.current.querySelector<HTMLElement>(
+          `[data-step=\"${currentStep}\"]`,
+        );
+        if (target) {
+          stepScrollRef.current.scrollTo({
+            left: Math.max(0, target.offsetLeft - 8),
+            behavior: "smooth",
+          });
+        }
       }
     }, 80);
 
@@ -112,10 +129,36 @@ export default function Home() {
     setHumanReady(false);
   };
 
+  const restartFromBeginning = () => {
+    clearTimers();
+    setSelectedScenario(null);
+    setCurrentStep(1);
+    setSubmitted(false);
+    setDomainReady(false);
+    setAgent1Ready(false);
+    setAgent2Ready(false);
+    setHumanReady(false);
+  };
+
   const nextDisabled = !isStepReady || currentStep >= 7;
 
   const renderStepCard = (step: StepNumber) => {
-    if (!scenario && step > 1) return null;
+    if (step > currentStep) {
+      return (
+        <article className="rounded-2xl border border-slate-200 bg-white/70 p-5 shadow-card">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+            Step {step}
+          </p>
+          <h3 className="mt-1 font-[var(--font-manrope)] text-xl font-semibold text-slate-500">
+            {stepTitles[step]}
+          </h3>
+          <div className="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-400">
+            .
+          </div>
+        </article>
+      );
+    }
+
     const isActiveStep = step === currentStep;
 
     if (step === 1) {
@@ -190,33 +233,43 @@ export default function Home() {
       );
     }
 
-    return <Step7Delivery scenario={scenario} />;
+    return (
+      <Step7Delivery scenario={scenario} onRestart={restartFromBeginning} />
+    );
   };
 
-  const reachedSteps = Array.from({ length: currentStep }, (_, index) => (index + 1) as StepNumber);
+  const allSteps = [1, 2, 3, 4, 5, 6, 7] as StepNumber[];
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1320px] px-4 py-5 md:px-8 md:py-7">
       <header className="rounded-2xl border border-brand-200 bg-white/95 px-5 py-5 text-center shadow-card">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">Financial AI Trust Infrastructure</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">
+          Financial AI Trust Infrastructure
+        </p>
         <h1 className="mt-1 font-[var(--font-manrope)] text-2xl font-semibold text-navy-900 md:text-3xl">
-          H-TRUST Decision Flow Demo
+          H-TRUST Demo
         </h1>
         <p className="mt-2 text-sm text-navy-700 md:text-base">
-          Domain AI는 판단을 만들고, TRUST Layer는 그 판단을 설명 가능하고 관리 가능한 결정으로 바꿉니다.
+          Domain AI는 판단을 만들고, TRUST Layer는 그 판단을 설명 가능하고 관리
+          가능한 결정으로 바꿉니다.
         </p>
       </header>
 
-      <section className="mt-4">
-        <h2 className="mb-3 font-[var(--font-manrope)] text-lg font-semibold text-navy-900">Step Content Area</h2>
-        <div ref={stepScrollRef} className="overflow-x-auto pb-2">
+      <section className="mt-4 -mx-4 md:-mx-8">
+        <p className="mb-2 px-4 text-xs text-slate-500 md:px-8">
+          좌우로 스크롤해 다음 Step을 확인해보세요.
+        </p>
+        <div
+          ref={stepScrollRef}
+          className="hide-scrollbar overflow-x-auto pb-2"
+        >
           <AnimatePresence mode="popLayout">
-            <div className="flex w-max gap-3">
-              {reachedSteps.map((step, index) => (
+            <div className="flex w-max gap-3 px-4 md:px-8">
+              {allSteps.map((step) => (
                 <motion.div
                   key={step}
                   {...cardMotion}
-                  ref={index === reachedSteps.length - 1 ? lastStepRef : null}
+                  data-step={step}
                   className="w-[90vw] max-w-[720px] shrink-0 md:w-[640px]"
                 >
                   {renderStepCard(step)}

@@ -16,7 +16,14 @@ export default function Step7Delivery({ scenario, onRestart }: Props) {
         <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-brand-700">Final Message</span>
       </div>
 
-      <p className="mt-4 rounded-lg bg-white p-4 text-sm leading-relaxed text-navy-800">{scenario.deliveryMessage}</p>
+      <p className="mt-4 whitespace-pre-line rounded-lg bg-white p-4 text-sm leading-relaxed text-navy-800">{scenario.deliveryMessage}</p>
+      <ul className="mt-3 space-y-1 text-xs text-navy-700">
+        {scenario.followUps.map((item) => (
+          <li key={item} className="rounded bg-white/80 px-2 py-1">
+            {item}
+          </li>
+        ))}
+      </ul>
       <div className="mt-3 flex flex-wrap gap-2">
         <button className="rounded-md border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand-700">
           재검토 요청

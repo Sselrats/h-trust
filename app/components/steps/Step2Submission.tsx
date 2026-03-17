@@ -35,22 +35,27 @@ export default function Step2Submission({ scenario, submitted, onSubmit }: Props
         <span className="rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-700">Document Intake</span>
       </div>
 
+      <div className="mt-3 rounded-lg border border-brand-200 bg-brand-100/30 p-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-500">Customer Request</p>
+        <p className="mt-1 text-sm text-navy-800">{scenario.userText}</p>
+      </div>
+
       <div className="mt-3 rounded-lg border border-dashed border-brand-500/40 bg-brand-100/40 p-4">
         <p className="text-sm font-medium text-navy-700">첨부파일 목록</p>
         <ul className="mt-2 space-y-2 text-sm text-navy-800">
           {scenario.submissions.map((file, index) => {
             const isReady = submitted || index < readyCount;
             return (
-            <li key={file} className="flex items-center justify-between rounded-md bg-white px-3 py-2">
-              <span>{file}</span>
-              <span
-                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                  isReady ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-500"
-                }`}
-              >
-                {isReady ? "READY" : "PENDING"}
-              </span>
-            </li>
+              <li key={file} className="flex items-center justify-between rounded-md bg-white px-3 py-2">
+                <span>{file}</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                    isReady ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  {isReady ? "READY" : "PENDING"}
+                </span>
+              </li>
             );
           })}
         </ul>

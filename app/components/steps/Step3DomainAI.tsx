@@ -28,22 +28,25 @@ export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled,
           <div className="rounded-lg border border-white/20 bg-white/10 p-3">
             <p className="text-xs font-semibold text-[#dbeafe]">Thinking</p>
             <ul className="mt-2 space-y-1.5 text-xs text-[#dbeafe]/90">
-              <li className="animate-pulse">- 입력 데이터 정합성 검사</li>
+              <li className="animate-pulse">- case_id와 제출 채널 메타데이터 매핑</li>
               <li className="animate-pulse [animation-delay:220ms]">- 리스크 피처 스코어링 계산</li>
               <li className="animate-pulse [animation-delay:420ms]">- 사유 코드 우선순위 정렬</li>
             </ul>
           </div>
-          <div className="rounded-lg border border-white/20 bg-white/10 p-3">
-            <p className="text-xs font-semibold text-[#dbeafe]">활성 모듈</p>
-            <div className="mt-2 grid gap-2">
-              <div className="h-2 w-full animate-pulse rounded bg-white/25" />
-              <div className="h-2 w-4/5 animate-pulse rounded bg-white/20" />
-              <div className="h-2 w-2/3 animate-pulse rounded bg-white/20" />
-            </div>
-          </div>
         </div>
       ) : (
         <div className="mt-4 space-y-3">
+          <div className="rounded-lg border border-white/20 bg-white/10 p-3">
+            <p className="text-xs font-semibold text-[#dbeafe]">Case Snapshot</p>
+            <p className="mt-1 text-xs text-white/90">{scenario.caseId}</p>
+            <ul className="mt-2 grid gap-1.5 text-xs text-white/90 md:grid-cols-2">
+              {scenario.domainSnapshot.map((item) => (
+                <li key={item.label} className="rounded bg-white/10 px-2 py-1">
+                  <span className="text-[#dbeafe]">{item.label}:</span> {item.value}
+                </li>
+              ))}
+            </ul>
+          </div>
           <div className="rounded-lg border border-white/20 bg-white/10 p-3">
             <p className="text-xs font-semibold text-[#dbeafe]">Domain Finding</p>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -52,20 +55,6 @@ export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled,
                   {finding}
                 </span>
               ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-md bg-white/10 p-2">
-              <p className="text-[#dbeafe]">Signals</p>
-              <p className="mt-1 text-sm font-semibold text-white">{scenario.domainFindings.length}</p>
-            </div>
-            <div className="rounded-md bg-white/10 p-2">
-              <p className="text-[#dbeafe]">Latency</p>
-              <p className="mt-1 text-sm font-semibold text-white">1.2s</p>
-            </div>
-            <div className="rounded-md bg-white/10 p-2">
-              <p className="text-[#dbeafe]">Status</p>
-              <p className="mt-1 text-sm font-semibold text-white">DONE</p>
             </div>
           </div>
         </div>

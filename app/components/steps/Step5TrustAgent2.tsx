@@ -8,6 +8,12 @@ type Props = {
   onNext: () => void;
 };
 
+const severityClass = {
+  CRITICAL: "bg-red-100 text-red-700",
+  HIGH: "bg-amber-100 text-amber-700",
+  MINOR: "bg-slate-100 text-slate-700"
+} as const;
+
 export default function Step5TrustAgent2({ scenario, ready, showNext, nextDisabled, onNext }: Props) {
   return (
     <article className="rounded-2xl border border-[#22c55e]/45 bg-[#22c55e]/10 p-5 shadow-card">
@@ -28,26 +34,26 @@ export default function Step5TrustAgent2({ scenario, ready, showNext, nextDisabl
           <div className="rounded-lg border border-[#22c55e]/40 bg-[#dcfce7] p-3">
             <p className="text-xs font-semibold text-[#166534]">Thinking</p>
             <ul className="mt-2 space-y-1.5 text-xs text-[#14532d]">
-              <li className="animate-pulse">- 과도한 단정/오해 가능 표현 탐지</li>
-              <li className="animate-pulse [animation-delay:220ms]">- 증거 부족 구간 및 누락 맥락 확인</li>
-              <li className="animate-pulse [animation-delay:420ms]">- 소비자 보호 정책 위반 리스크 점검</li>
+              <li className="animate-pulse">- 소비자 오인 가능 문구 탐지</li>
+              <li className="animate-pulse [animation-delay:220ms]">- 법/정책 위반 문구 점검</li>
+              <li className="animate-pulse [animation-delay:420ms]">- 분쟁 가능성 시나리오 생성</li>
             </ul>
-          </div>
-          <div className="grid gap-2">
-            <div className="h-2 w-full animate-pulse rounded bg-[#86efac]" />
-            <div className="h-2 w-11/12 animate-pulse rounded bg-[#86efac]" />
-            <div className="h-2 w-3/4 animate-pulse rounded bg-[#86efac]" />
-            <div className="h-2 w-2/3 animate-pulse rounded bg-[#86efac]" />
           </div>
         </div>
       ) : (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="rounded-xl border border-[#22c55e]/45 bg-[#dcfce7]/85 p-4">
             <p className="text-sm font-semibold text-[#15803d]">Red-Team Report</p>
-            <ul className="mt-2 space-y-1.5 text-sm text-navy-800">
+            <ul className="mt-2 space-y-2 text-sm text-navy-800">
               {scenario.redTeamRisks.map((risk) => (
-                <li key={risk} className="rounded-md bg-white/90 px-2 py-1">
-                  Potential Risk: {risk}
+                <li key={risk.title} className="rounded-md bg-white/95 p-2">
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <p className="font-semibold">{risk.title}</p>
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${severityClass[risk.severity]}`}>
+                      {risk.severity}
+                    </span>
+                  </div>
+                  <p className="text-xs text-navy-700">{risk.detail}</p>
                 </li>
               ))}
             </ul>
@@ -64,6 +70,7 @@ export default function Step5TrustAgent2({ scenario, ready, showNext, nextDisabl
                   <div className="h-1.5 rounded bg-white">
                     <div className="h-1.5 rounded bg-[#22c55e]" style={{ width: `${item.score}%` }} />
                   </div>
+                  <p className="mt-1 text-xs text-slate-600">{item.note}</p>
                 </li>
               ))}
             </ul>

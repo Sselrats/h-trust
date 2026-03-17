@@ -28,21 +28,16 @@ export default function Step4TrustAgent1({ scenario, ready, showNext, nextDisabl
           <div className="rounded-lg border border-[#22c55e]/40 bg-[#dcfce7] p-3">
             <p className="text-xs font-semibold text-[#166534]">Thinking</p>
             <ul className="mt-2 space-y-1.5 text-xs text-[#14532d]">
-              <li className="animate-pulse">- 내부 코드와 약관 조항 매핑</li>
-              <li className="animate-pulse [animation-delay:220ms]">- 고객 친화 문장으로 변환</li>
-              <li className="animate-pulse [animation-delay:420ms]">- Citation 삽입 및 문맥 점검</li>
+              <li className="animate-pulse">- 사유코드와 정책 근거 조항 매핑</li>
+              <li className="animate-pulse [animation-delay:220ms]">- 고객 이해용 문장 생성</li>
+              <li className="animate-pulse [animation-delay:420ms]">- Citation 삽입 및 톤 정렬</li>
             </ul>
-          </div>
-          <div className="rounded-lg border border-[#22c55e]/40 bg-[#dcfce7]/70 p-3">
-            <div className="h-2 w-full animate-pulse rounded bg-[#86efac]" />
-            <div className="mt-2 h-2 w-5/6 animate-pulse rounded bg-[#86efac]" />
-            <div className="mt-2 h-2 w-3/4 animate-pulse rounded bg-[#86efac]" />
           </div>
         </div>
       ) : (
         <div className="mt-4 space-y-3">
           <div className="rounded-xl border border-[#22c55e]/45 bg-[#dcfce7]/85 p-4">
-            <p className="text-sm leading-relaxed text-navy-800">{scenario.trustDraft}</p>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-navy-800">{scenario.trustDraft}</p>
             <p className="mt-2 inline-flex rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[#15803d]">
               Citation: {scenario.citation}
             </p>

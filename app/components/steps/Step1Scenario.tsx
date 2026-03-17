@@ -21,7 +21,7 @@ export default function Step1Scenario({ selectedScenario, onSelectScenario, show
         <span className="rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-700">Scenario Setup</span>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
+      <div className="mt-4 space-y-2.5">
         {scenarioEntries.map(([key, value]) => {
           const active = selectedScenario === key;
           return (
@@ -29,17 +29,17 @@ export default function Step1Scenario({ selectedScenario, onSelectScenario, show
               key={key}
               type="button"
               onClick={() => onSelectScenario(key)}
-              className={`rounded-xl border p-4 text-left transition ${
+              className={`w-full rounded-xl border px-4 py-3 text-left transition ${
                 active
                   ? "border-brand-500 bg-brand-100 ring-2 ring-brand-200"
-                  : "border-brand-200 bg-white hover:border-brand-500 hover:bg-brand-100/60"
+                  : "border-slate-200 bg-white hover:border-brand-400 hover:bg-brand-50"
               }`}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-navy-900">{value.title}</p>
                 <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-brand-500" : "bg-slate-300"}`} />
               </div>
-              <p className="mt-2 text-sm text-navy-700">{value.subtitle}</p>
+              <p className="mt-1 truncate text-sm text-slate-600">{value.subtitle}</p>
             </button>
           );
         })}

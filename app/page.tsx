@@ -24,8 +24,8 @@ const stepTitles: Record<StepNumber, string> = {
   3: "Domain AI 분석",
   4: "Trust Layer - Draft&Citation LLM",
   5: "Trust Layer - Red Team LLM",
-  6: "Human Review",
-  7: "Customer Delivery",
+  6: "Human Step",
+  7: "Final Message",
 };
 
 export default function Home() {

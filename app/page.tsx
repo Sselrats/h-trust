@@ -29,10 +29,14 @@ const stepTitles: Record<StepNumber, string> = {
 };
 
 export default function Home() {
+  const [demoMode, setDemoMode] = useState(false);
+  const [demoIntervalMs, setDemoIntervalMs] = useState(1000);
   const [selectedScenario, setSelectedScenario] = useState<ScenarioKey | null>(
     null,
   );
   const [currentStep, setCurrentStep] = useState<StepNumber>(1);
+  const [focusStep, setFocusStep] = useState<StepNumber>(1);
+  const [demoIndex, setDemoIndex] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [domainReady, setDomainReady] = useState(false);
   const [agent1Ready, setAgent1Ready] = useState(false);
@@ -47,6 +51,18 @@ export default function Home() {
     [selectedScenario],
   );
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setDemoMode(params.get("demo") === "1");
+    const parsedMs = Number(params.get("ms"));
+    if (Number.isFinite(parsedMs) && parsedMs >= 300) {
+      setDemoIntervalMs(parsedMs);
+    } else {
+      setDemoIntervalMs(1000);
+    }
+  }, []);
+
   const clearTimers = useCallback(() => {
     timersRef.current.forEach((timer) => window.clearTimeout(timer));
     timersRef.current = [];
@@ -54,18 +70,34 @@ export default function Home() {
 
   const goToNextStep = useCallback(() => {
     setCurrentStep((prev) => {
+      if (demoMode) return prev;
       if (prev >= 7) return prev;
       if (prev === 1 && !selectedScenario) return prev;
       if (prev === 2) setSubmitted(true);
       return (prev + 1) as StepNumber;
     });
-  }, [selectedScenario]);
+  }, [demoMode, selectedScenario]);
+
+  useEffect(() => {
+    if (!demoMode) return;
+    clearTimers();
+    setSelectedScenario("insurance");
+    setCurrentStep(7);
+    setFocusStep(1);
+    setDemoIndex(0);
+    setSubmitted(true);
+    setDomainReady(true);
+    setAgent1Ready(true);
+    setAgent2Ready(true);
+    setHumanReady(true);
+  }, [clearTimers, demoMode]);
 
   useEffect(() => {
     return () => clearTimers();
   }, [clearTimers]);
 
   useEffect(() => {
+    if (demoMode) return;
     if (currentStep === 3) {
       setDomainReady(false);
       const timer = window.setTimeout(() => setDomainReady(true), 5000);
@@ -89,23 +121,47 @@ export default function Home() {
       const timer = window.setTimeout(() => setHumanReady(true), 1600);
       timersRef.current.push(timer);
     }
-  }, [currentStep]);
+  }, [currentStep, demoMode]);
 
   const isStepReady =
-    (currentStep === 1 && !!selectedScenario) ||
-    (currentStep === 2 && submitted) ||
-    (currentStep === 3 && domainReady) ||
-    (currentStep === 4 && agent1Ready) ||
-    (currentStep === 5 && agent2Ready) ||
-    (currentStep === 6 && humanReady) ||
-    currentStep === 7;
+    demoMode ||
+    ((currentStep === 1 && !!selectedScenario) ||
+      (currentStep === 2 && submitted) ||
+      (currentStep === 3 && domainReady) ||
+      (currentStep === 4 && agent1Ready) ||
+      (currentStep === 5 && agent2Ready) ||
+      (currentStep === 6 && humanReady) ||
+      currentStep === 7);
+
+  useEffect(() => {
+    if (!demoMode) return;
+    // Keep Step 1 visible briefly before auto-rotating in demo mode.
+    const startTimer = window.setTimeout(() => {
+      const interval = window.setInterval(() => {
+        setDemoIndex((prev) => prev + 1);
+        setFocusStep((prev) => (prev === 7 ? 1 : ((prev + 1) as StepNumber)));
+      }, demoIntervalMs);
+      timersRef.current.push(interval);
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(startTimer);
+      timersRef.current.forEach((timer) => window.clearInterval(timer));
+      timersRef.current = [];
+    };
+  }, [demoMode, demoIntervalMs]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (stepScrollRef.current) {
-        const target = stepScrollRef.current.querySelector<HTMLElement>(
-          `[data-step=\"${currentStep}\"]`,
-        );
+        const targetStep = demoMode ? focusStep : currentStep;
+        const target = demoMode
+          ? stepScrollRef.current.querySelector<HTMLElement>(
+              `[data-index=\"${demoIndex}\"]`,
+            )
+          : stepScrollRef.current.querySelector<HTMLElement>(
+              `[data-step=\"${targetStep}\"]`,
+            );
         if (target) {
           const container = stepScrollRef.current;
           const targetCenter = target.offsetLeft + target.offsetWidth / 2;
@@ -119,7 +175,7 @@ export default function Home() {
     }, 80);
 
     return () => window.clearTimeout(timer);
-  }, [currentStep]);
+  }, [currentStep, demoMode, focusStep, demoIndex]);
 
   const resetFlow = (nextScenario: ScenarioKey) => {
     clearTimers();
@@ -146,7 +202,7 @@ export default function Home() {
   const nextDisabled = !isStepReady || currentStep >= 7;
 
   const renderStepCard = (step: StepNumber) => {
-    if (step > currentStep) {
+    if (!demoMode && step > currentStep) {
       return (
         <article className="rounded-2xl border border-slate-200 bg-white/70 p-5 shadow-card">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
@@ -162,14 +218,15 @@ export default function Home() {
       );
     }
 
-    const isActiveStep = step === currentStep;
+    const isActiveStep = step === (demoMode ? focusStep : currentStep);
+    const showStepButton = !demoMode && isActiveStep;
 
     if (step === 1) {
       return (
         <Step1Scenario
           selectedScenario={selectedScenario}
           onSelectScenario={resetFlow}
-          showNext={isActiveStep}
+          showNext={showStepButton}
           nextDisabled={nextDisabled}
           onNext={goToNextStep}
         />
@@ -196,7 +253,7 @@ export default function Home() {
         <Step3DomainAI
           scenario={scenario}
           ready={domainReady}
-          showNext={isActiveStep}
+          showNext={showStepButton}
           nextDisabled={nextDisabled}
           onNext={goToNextStep}
         />
@@ -207,7 +264,7 @@ export default function Home() {
         <Step4TrustAgent1
           scenario={scenario}
           ready={agent1Ready}
-          showNext={isActiveStep}
+          showNext={showStepButton}
           nextDisabled={nextDisabled}
           onNext={goToNextStep}
         />
@@ -218,7 +275,7 @@ export default function Home() {
         <Step5TrustAgent2
           scenario={scenario}
           ready={agent2Ready}
-          showNext={isActiveStep}
+          showNext={showStepButton}
           nextDisabled={nextDisabled}
           onNext={goToNextStep}
         />
@@ -229,7 +286,7 @@ export default function Home() {
         <Step6HumanReview
           scenario={scenario}
           ready={humanReady}
-          showNext={isActiveStep}
+          showNext={showStepButton}
           nextDisabled={nextDisabled}
           onNext={goToNextStep}
         />
@@ -242,6 +299,11 @@ export default function Home() {
   };
 
   const allSteps = [1, 2, 3, 4, 5, 6, 7] as StepNumber[];
+  const demoSteps = Array.from(
+    { length: 70 },
+    (_, i) => allSteps[i % allSteps.length],
+  ) as StepNumber[];
+  const renderSteps = demoMode ? demoSteps : allSteps;
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1320px] px-4 py-5 md:px-8 md:py-7">
@@ -268,11 +330,12 @@ export default function Home() {
         >
           <AnimatePresence mode="popLayout">
             <div className="flex w-max gap-3 px-4 md:px-8">
-              {allSteps.map((step) => (
+              {renderSteps.map((step, idx) => (
                 <motion.div
-                  key={step}
+                  key={`${step}-${idx}`}
                   {...cardMotion}
                   data-step={step}
+                  data-index={idx}
                   className="w-[90vw] max-w-[720px] shrink-0 md:w-[640px]"
                 >
                   {renderStepCard(step)}

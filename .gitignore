@@ -35,3 +35,8 @@ next-env.d.ts
 # editor
 .vscode/
 .idea/
+
+# generated recordings
+/output/*
+!/output/h-trust-demo.gif
+!/output/h-trust-demo.mp4

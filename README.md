@@ -1,5 +1,7 @@
 # H-TRUST Demo
 
+![H-TRUST Demo](output/h-trust-demo.gif)
+
 Financial AI Trust Infrastructure를 한 화면에서 보여주는 인터랙티브 데모.
 
 `Domain AI -> TRUST Layer -> Human Step -> Final Message`

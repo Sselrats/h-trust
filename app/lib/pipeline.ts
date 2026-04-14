@@ -10,13 +10,27 @@ export type StepResult =
 
 export async function runStep(step: 3 | 4 | 5 | 6, scenarioKey: ScenarioKey): Promise<StepResult> {
   if (step === 4) {
-    const res = await fetch("/api/pipeline/4", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ scenarioKey }),
-    });
-    const data = await res.json();
-    return { step: 4, ...data };
+    const s = scenarioMap[scenarioKey];
+    const scenarioFallback: Step4Result = {
+      draft: s.trustDraft,
+      citation: s.citation,
+      source: "fallback",
+      fallbackReason: "api_error",
+    };
+    try {
+      const res = await fetch("/api/pipeline/4", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenarioKey }),
+      });
+      if (!res.ok) {
+        return { step: 4, ...scenarioFallback };
+      }
+      const data = await res.json();
+      return { step: 4, ...data };
+    } catch {
+      return { step: 4, ...scenarioFallback };
+    }
   }
 
   const delay = step === 6 ? 1600 : 5000;

@@ -12,7 +12,7 @@ import Step5TrustAgent2 from "./components/steps/Step5TrustAgent2";
 import Step6HumanReview from "./components/steps/Step6HumanReview";
 import Step7Delivery from "./components/steps/Step7Delivery";
 import type { ScenarioKey, StepNumber } from "./components/steps/types";
-import type { Step4Result } from "./lib/types";
+import type { Step3Result, Step4Result, Step5Result } from "./lib/types";
 
 const cardMotion = {
   initial: { opacity: 0, y: 16 },
@@ -45,6 +45,8 @@ export default function Home() {
   const [agent2Ready, setAgent2Ready] = useState(false);
   const [humanReady, setHumanReady] = useState(false);
   const [step4Result, setStep4Result] = useState<Step4Result | null>(null);
+  const [step3Result, setStep3Result] = useState<Step3Result | null>(null);
+  const [step5Result, setStep5Result] = useState<Step5Result | null>(null);
 
   const timersRef = useRef<number[]>([]);
   const stepScrollRef = useRef<HTMLDivElement | null>(null);
@@ -105,11 +107,17 @@ export default function Home() {
 
     if (currentStep === 3) {
       setDomainReady(false);
-      runStep(3, selectedScenario).then(() => { if (!cancelled) setDomainReady(true); });
+      runStep(3, selectedScenario).then((result) => {
+        if (!cancelled) {
+          const r = result as { step: 3 } & Step3Result;
+          setStep3Result({ findings: r.findings, summary: r.summary, source: r.source, fallbackReason: r.fallbackReason });
+          setDomainReady(true);
+        }
+      });
     }
     if (currentStep === 4) {
       setAgent1Ready(false);
-      runStep(4, selectedScenario).then((result) => {
+      runStep(4, selectedScenario, { step3Findings: step3Result?.findings ?? [] }).then((result) => {
         if (!cancelled) {
           setStep4Result(result as Step4Result & { step: 4 });
           setAgent1Ready(true);
@@ -118,7 +126,16 @@ export default function Home() {
     }
     if (currentStep === 5) {
       setAgent2Ready(false);
-      runStep(5, selectedScenario).then(() => { if (!cancelled) setAgent2Ready(true); });
+      runStep(5, selectedScenario, {
+        step4Draft: step4Result?.draft,
+        step4Citation: step4Result?.citation,
+      }).then((result) => {
+        if (!cancelled) {
+          const r = result as { step: 5 } & Step5Result;
+          setStep5Result({ risks: r.risks, scores: r.scores, source: r.source, fallbackReason: r.fallbackReason });
+          setAgent2Ready(true);
+        }
+      });
     }
     if (currentStep === 6) {
       setHumanReady(false);
@@ -126,6 +143,10 @@ export default function Home() {
     }
 
     return () => { cancelled = true; };
+    // step3Result and step4Result are intentionally omitted from deps:
+    // they are always set before currentStep advances, so the closure
+    // captures fresh values when currentStep changes to 4 or 5.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, demoMode, selectedScenario]);
 
   const isStepReady =
@@ -192,6 +213,8 @@ export default function Home() {
     setAgent2Ready(false);
     setHumanReady(false);
     setStep4Result(null);
+    setStep3Result(null);
+    setStep5Result(null);
   };
 
   const restartFromBeginning = () => {
@@ -204,6 +227,8 @@ export default function Home() {
     setAgent2Ready(false);
     setHumanReady(false);
     setStep4Result(null);
+    setStep3Result(null);
+    setStep5Result(null);
   };
 
   const nextDisabled = !isStepReady || currentStep >= 7;
@@ -263,6 +288,8 @@ export default function Home() {
           showNext={showStepButton}
           nextDisabled={nextDisabled}
           onNext={goToNextStep}
+          findings={step3Result?.findings}
+          summary={step3Result?.summary}
         />
       );
     }
@@ -288,6 +315,8 @@ export default function Home() {
           showNext={showStepButton}
           nextDisabled={nextDisabled}
           onNext={goToNextStep}
+          risks={step5Result?.risks}
+          scores={step5Result?.scores}
         />
       );
     }

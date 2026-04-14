@@ -47,7 +47,8 @@ export async function POST(
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const prompt = buildStep4Prompt(s);
+        const step3Findings = Array.isArray(body?.step3Findings) ? (body.step3Findings as string[]) : s.domainFindings;
+        const prompt = buildStep4Prompt(s, step3Findings);
         const result = await model.generateContent(prompt);
         const text = result.response.text();
         return NextResponse.json(parseStep4Response(text, staticFallback));

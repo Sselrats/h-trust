@@ -8,9 +8,10 @@ type Props = {
   onNext: () => void;
   findings?: string[];
   summary?: string;
+  source?: "ai" | "fallback";
 };
 
-export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled, onNext, findings, summary }: Props) {
+export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled, onNext, findings, summary, source }: Props) {
   const displayFindings = findings ?? scenario.domainFindings;
 
   return (
@@ -40,6 +41,11 @@ export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled,
         </div>
       ) : (
         <div className="mt-4 rounded-lg border border-slate-700 bg-black p-3">
+          {source === "fallback" && (
+            <p className="mb-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-600">
+              ⚠ 정적 데이터 (API 오류)
+            </p>
+          )}
           <p className="mb-2 text-xs font-semibold text-slate-400">Domain Findings (JSON)</p>
           <pre className="overflow-x-auto text-xs leading-relaxed text-slate-200">{`{
   "case_id": "${scenario.caseId}",

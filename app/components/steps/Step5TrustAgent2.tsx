@@ -9,6 +9,7 @@ type Props = {
   onNext: () => void;
   risks?: Step5Result["risks"];
   scores?: Step5Result["scores"];
+  source?: "ai" | "fallback";
 };
 
 const severityClass = {
@@ -17,7 +18,7 @@ const severityClass = {
   MINOR: "bg-slate-100 text-slate-700"
 } as const;
 
-export default function Step5TrustAgent2({ scenario, ready, showNext, nextDisabled, onNext, risks, scores }: Props) {
+export default function Step5TrustAgent2({ scenario, ready, showNext, nextDisabled, onNext, risks, scores, source }: Props) {
   const displayRisks = risks ?? scenario.redTeamRisks;
   const displayScores = scores ?? scenario.riskScores;
 
@@ -48,6 +49,11 @@ export default function Step5TrustAgent2({ scenario, ready, showNext, nextDisabl
         </div>
       ) : (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {source === "fallback" && (
+            <p className="md:col-span-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-600">
+              ⚠ 정적 데이터 (API 오류)
+            </p>
+          )}
           <div className="rounded-xl border border-red-200 bg-white p-4">
             <p className="text-sm font-semibold text-red-700">Red-Team Report</p>
             <ul className="mt-2 space-y-2 text-sm text-navy-800">

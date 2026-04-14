@@ -290,6 +290,7 @@ export default function Home() {
           onNext={goToNextStep}
           findings={step3Result?.findings}
           summary={step3Result?.summary}
+          source={step3Result?.source}
         />
       );
     }
@@ -317,6 +318,7 @@ export default function Home() {
           onNext={goToNextStep}
           risks={step5Result?.risks}
           scores={step5Result?.scores}
+          source={step5Result?.source}
         />
       );
     }

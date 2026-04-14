@@ -44,14 +44,29 @@ export function parseStep5Response(text: string, fallback: Step5Result): Step5Re
   }
 
   const p = parsed as Record<string, unknown>;
-  if (
-    typeof parsed !== "object" ||
-    parsed === null ||
-    !Array.isArray(p.risks) ||
-    (p.risks as unknown[]).length === 0 ||
-    !Array.isArray(p.scores) ||
-    (p.scores as unknown[]).length === 0
-  ) {
+  const risksValid =
+    Array.isArray(p.risks) &&
+    (p.risks as unknown[]).length > 0 &&
+    (p.risks as unknown[]).every(
+      (r) =>
+        typeof r === "object" &&
+        r !== null &&
+        typeof (r as Record<string, unknown>).severity === "string" &&
+        typeof (r as Record<string, unknown>).title === "string" &&
+        typeof (r as Record<string, unknown>).detail === "string"
+    );
+  const scoresValid =
+    Array.isArray(p.scores) &&
+    (p.scores as unknown[]).length > 0 &&
+    (p.scores as unknown[]).every(
+      (s) =>
+        typeof s === "object" &&
+        s !== null &&
+        typeof (s as Record<string, unknown>).label === "string" &&
+        typeof (s as Record<string, unknown>).score === "number" &&
+        typeof (s as Record<string, unknown>).note === "string"
+    );
+  if (typeof parsed !== "object" || parsed === null || !risksValid || !scoresValid) {
     return { ...fallback, source: "fallback", fallbackReason: "missing_fields" };
   }
 

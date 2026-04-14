@@ -129,4 +129,21 @@ describe("parseStep5Response", () => {
     expect(result.source).toBe("ai");
     expect(result.risks).toHaveLength(3);
   });
+
+  it("returns fallback with missing_fields when risks contains non-objects", () => {
+    const text = JSON.stringify({ risks: [null, 123, "bad"], scores: [{ label: "a", score: 50, note: "b" }] });
+    const result = parseStep5Response(text, fallback);
+    expect(result.source).toBe("fallback");
+    expect(result.fallbackReason).toBe("missing_fields");
+  });
+
+  it("returns fallback with missing_fields when scores contains invalid items", () => {
+    const text = JSON.stringify({
+      risks: [{ severity: "HIGH", title: "a", detail: "b" }],
+      scores: [{ label: "a", score: "not-a-number", note: "b" }],
+    });
+    const result = parseStep5Response(text, fallback);
+    expect(result.source).toBe("fallback");
+    expect(result.fallbackReason).toBe("missing_fields");
+  });
 });

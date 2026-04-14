@@ -3,11 +3,12 @@ import { buildStep4Prompt, parseStep4Response } from "../prompts/step4";
 import type { ScenarioData } from "../../components/steps/types";
 import type { Step4Result } from "../types";
 
-const mockScenario: Pick<ScenarioData, "title" | "userText" | "domainFindings"> = {
+const mockScenario: Pick<ScenarioData, "title" | "userText"> = {
   title: "보험금 지급 심사",
   userText: "보험금을 청구했는데 왜 이렇게 오래 걸리나요?",
-  domainFindings: ["FRAUD_SCORE_HIGH", "CLAIM_DUPLICATE"],
 };
+
+const mockFindings = ["FRAUD_SCORE_HIGH", "CLAIM_DUPLICATE"];
 
 const fallback: Step4Result = {
   draft: "정적 초안입니다.",
@@ -18,23 +19,28 @@ const fallback: Step4Result = {
 
 describe("buildStep4Prompt", () => {
   it("includes the scenario title", () => {
-    const prompt = buildStep4Prompt(mockScenario as ScenarioData);
+    const prompt = buildStep4Prompt(mockScenario, mockFindings);
     expect(prompt).toContain("보험금 지급 심사");
   });
 
   it("includes the user text", () => {
-    const prompt = buildStep4Prompt(mockScenario as ScenarioData);
+    const prompt = buildStep4Prompt(mockScenario, mockFindings);
     expect(prompt).toContain("보험금을 청구했는데 왜 이렇게 오래 걸리나요?");
   });
 
   it("includes domain findings", () => {
-    const prompt = buildStep4Prompt(mockScenario as ScenarioData);
+    const prompt = buildStep4Prompt(mockScenario, mockFindings);
     expect(prompt).toContain("FRAUD_SCORE_HIGH");
     expect(prompt).toContain("CLAIM_DUPLICATE");
   });
 
+  it("shows '없음' when findings is empty", () => {
+    const prompt = buildStep4Prompt(mockScenario, []);
+    expect(prompt).toContain("없음");
+  });
+
   it("requests JSON output", () => {
-    const prompt = buildStep4Prompt(mockScenario as ScenarioData);
+    const prompt = buildStep4Prompt(mockScenario, mockFindings);
     expect(prompt).toContain('"draft"');
     expect(prompt).toContain('"citation"');
   });

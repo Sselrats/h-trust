@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { runStep } from "./lib/pipeline";
 import { scenarioMap } from "./components/steps/data";
 import Step1Scenario from "./components/steps/Step1Scenario";
 import Step2Submission from "./components/steps/Step2Submission";
@@ -11,6 +12,7 @@ import Step5TrustAgent2 from "./components/steps/Step5TrustAgent2";
 import Step6HumanReview from "./components/steps/Step6HumanReview";
 import Step7Delivery from "./components/steps/Step7Delivery";
 import type { ScenarioKey, StepNumber } from "./components/steps/types";
+import type { Step4Result } from "./lib/types";
 
 const cardMotion = {
   initial: { opacity: 0, y: 16 },
@@ -42,6 +44,7 @@ export default function Home() {
   const [agent1Ready, setAgent1Ready] = useState(false);
   const [agent2Ready, setAgent2Ready] = useState(false);
   const [humanReady, setHumanReady] = useState(false);
+  const [step4Result, setStep4Result] = useState<Step4Result | null>(null);
 
   const timersRef = useRef<number[]>([]);
   const stepScrollRef = useRef<HTMLDivElement | null>(null);
@@ -97,31 +100,33 @@ export default function Home() {
   }, [clearTimers]);
 
   useEffect(() => {
-    if (demoMode) return;
+    if (demoMode || !selectedScenario) return;
+    let cancelled = false;
+
     if (currentStep === 3) {
       setDomainReady(false);
-      const timer = window.setTimeout(() => setDomainReady(true), 5000);
-      timersRef.current.push(timer);
+      runStep(3, selectedScenario).then(() => { if (!cancelled) setDomainReady(true); });
     }
-
     if (currentStep === 4) {
       setAgent1Ready(false);
-      const timer = window.setTimeout(() => setAgent1Ready(true), 5000);
-      timersRef.current.push(timer);
+      runStep(4, selectedScenario).then((result) => {
+        if (!cancelled) {
+          setStep4Result(result as Step4Result & { step: 4 });
+          setAgent1Ready(true);
+        }
+      });
     }
-
     if (currentStep === 5) {
       setAgent2Ready(false);
-      const timer = window.setTimeout(() => setAgent2Ready(true), 5000);
-      timersRef.current.push(timer);
+      runStep(5, selectedScenario).then(() => { if (!cancelled) setAgent2Ready(true); });
     }
-
     if (currentStep === 6) {
       setHumanReady(false);
-      const timer = window.setTimeout(() => setHumanReady(true), 1600);
-      timersRef.current.push(timer);
+      runStep(6, selectedScenario).then(() => { if (!cancelled) setHumanReady(true); });
     }
-  }, [currentStep, demoMode]);
+
+    return () => { cancelled = true; };
+  }, [currentStep, demoMode, selectedScenario]);
 
   const isStepReady =
     demoMode ||
@@ -186,6 +191,7 @@ export default function Home() {
     setAgent1Ready(false);
     setAgent2Ready(false);
     setHumanReady(false);
+    setStep4Result(null);
   };
 
   const restartFromBeginning = () => {
@@ -197,6 +203,7 @@ export default function Home() {
     setAgent1Ready(false);
     setAgent2Ready(false);
     setHumanReady(false);
+    setStep4Result(null);
   };
 
   const nextDisabled = !isStepReady || currentStep >= 7;
@@ -267,6 +274,9 @@ export default function Home() {
           showNext={showStepButton}
           nextDisabled={nextDisabled}
           onNext={goToNextStep}
+          draft={step4Result?.draft}
+          citation={step4Result?.citation}
+          source={step4Result?.source}
         />
       );
     }

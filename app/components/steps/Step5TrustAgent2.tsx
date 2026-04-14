@@ -1,4 +1,5 @@
 import type { ScenarioData } from "./types";
+import type { Step5Result } from "../../lib/types";
 
 type Props = {
   scenario: ScenarioData;
@@ -6,6 +7,8 @@ type Props = {
   showNext: boolean;
   nextDisabled: boolean;
   onNext: () => void;
+  risks?: Step5Result["risks"];
+  scores?: Step5Result["scores"];
 };
 
 const severityClass = {
@@ -14,7 +17,10 @@ const severityClass = {
   MINOR: "bg-slate-100 text-slate-700"
 } as const;
 
-export default function Step5TrustAgent2({ scenario, ready, showNext, nextDisabled, onNext }: Props) {
+export default function Step5TrustAgent2({ scenario, ready, showNext, nextDisabled, onNext, risks, scores }: Props) {
+  const displayRisks = risks ?? scenario.redTeamRisks;
+  const displayScores = scores ?? scenario.riskScores;
+
   return (
     <article className="rounded-2xl border border-red-300/60 bg-gradient-to-b from-red-50 to-white p-5 shadow-card">
       <div className="flex items-start justify-between gap-3">
@@ -45,7 +51,7 @@ export default function Step5TrustAgent2({ scenario, ready, showNext, nextDisabl
           <div className="rounded-xl border border-red-200 bg-white p-4">
             <p className="text-sm font-semibold text-red-700">Red-Team Report</p>
             <ul className="mt-2 space-y-2 text-sm text-navy-800">
-              {scenario.redTeamRisks.map((risk) => (
+              {displayRisks.map((risk) => (
                 <li key={risk.title} className="rounded-md bg-slate-50 p-2">
                   <div className="mb-1 flex items-center justify-between gap-2">
                     <p className="font-semibold">{risk.title}</p>
@@ -61,7 +67,7 @@ export default function Step5TrustAgent2({ scenario, ready, showNext, nextDisabl
           <div className="rounded-xl border border-red-200 bg-white p-4">
             <p className="text-sm font-semibold text-navy-800">Risk Score List</p>
             <ul className="mt-2 space-y-2 text-sm text-navy-700">
-              {scenario.riskScores.map((item) => (
+              {displayScores.map((item) => (
                 <li key={item.label}>
                   <div className="mb-1 flex items-center justify-between">
                     <span>{item.label}</span>

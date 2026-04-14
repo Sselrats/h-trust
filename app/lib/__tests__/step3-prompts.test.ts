@@ -99,4 +99,11 @@ describe("parseStep3Response", () => {
     expect(result.source).toBe("ai");
     expect(result.findings).toEqual(["발견1", "발견2", "발견3"]);
   });
+
+  it("returns fallback with missing_fields when findings contains non-strings", () => {
+    const text = JSON.stringify({ findings: [1, 2, 3], summary: "요약" });
+    const result = parseStep3Response(text, fallback);
+    expect(result.source).toBe("fallback");
+    expect(result.fallbackReason).toBe("missing_fields");
+  });
 });

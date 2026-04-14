@@ -44,6 +44,7 @@ export function parseStep3Response(text: string, fallback: Step3Result): Step3Re
     parsed === null ||
     !Array.isArray(p.findings) ||
     (p.findings as unknown[]).length === 0 ||
+    !(p.findings as unknown[]).every((f) => typeof f === "string") ||
     typeof p.summary !== "string" ||
     p.summary === ""
   ) {

@@ -6,9 +6,13 @@ type Props = {
   showNext: boolean;
   nextDisabled: boolean;
   onNext: () => void;
+  findings?: string[];
+  summary?: string;
 };
 
-export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled, onNext }: Props) {
+export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled, onNext, findings, summary }: Props) {
+  const displayFindings = findings ?? scenario.domainFindings;
+
   return (
     <article className="rounded-2xl border border-slate-300 bg-slate-950 p-5 text-white shadow-card">
       <div className="flex items-start justify-between gap-3">
@@ -45,8 +49,8 @@ ${scenario.domainSnapshot
   .join(",\n")}
   },
   "domain_findings": [
-${scenario.domainFindings.map((finding) => `    "${finding}"`).join(",\n")}
-  ]
+${displayFindings.map((f) => `    "${f}"`).join(",\n")}
+  ]${summary ? `,\n  "summary": "${summary}"` : ""}
 }`}</pre>
         </div>
       )}

@@ -15,6 +15,33 @@ function getModel(apiKey: string) {
   return genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 }
 
+function is503(err: unknown): boolean {
+  if (typeof (err as { status?: unknown }).status === "number") {
+    return (err as { status: number }).status === 503;
+  }
+  return err instanceof Error && err.message.includes("503");
+}
+
+async function generateWithRetry(
+  model: ReturnType<typeof getModel>,
+  prompt: string,
+  retries = 2,
+): Promise<string> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    } catch (err) {
+      if (is503(err) && attempt < retries) {
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error("unreachable");
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: { step: string } },
@@ -47,8 +74,7 @@ export async function POST(
       try {
         const model = getModel(apiKey);
         const prompt = buildStep3Prompt(s);
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
+        const text = await generateWithRetry(model, prompt);
         return NextResponse.json(parseStep3Response(text, staticFallback));
       } catch (err) {
         console.error("[Step3] Gemini error:", err);
@@ -70,8 +96,7 @@ export async function POST(
       try {
         const model = getModel(apiKey);
         const prompt = buildStep4Prompt(s, step3Findings);
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
+        const text = await generateWithRetry(model, prompt);
         return NextResponse.json(parseStep4Response(text, staticFallback));
       } catch (err) {
         console.error("[Step4] Gemini error:", err);
@@ -92,8 +117,7 @@ export async function POST(
       try {
         const model = getModel(apiKey);
         const prompt = buildStep5Prompt(s, step4Draft, step4Citation);
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
+        const text = await generateWithRetry(model, prompt);
         return NextResponse.json(parseStep5Response(text, staticFallback));
       } catch (err) {
         console.error("[Step5] Gemini error:", err);

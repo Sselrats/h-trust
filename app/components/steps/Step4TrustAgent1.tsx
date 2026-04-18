@@ -53,8 +53,8 @@ export default function Step4TrustAgent1({
         <div className="mt-4 space-y-3">
           <div className="rounded-xl border border-[#3b82f6]/35 bg-white/90 p-4">
             {source === "fallback" && (
-              <p className="mb-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-600">
-                ⚠ 정적 데이터 (API 오류)
+              <p className="mb-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+                Static Mode
               </p>
             )}
             <p className="whitespace-pre-line text-sm leading-relaxed text-navy-800">{displayDraft}</p>

@@ -44,8 +44,8 @@ export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled,
       ) : (
         <div className="mt-4 rounded-lg border border-slate-700 bg-black p-3">
           {source === "fallback" && (
-            <p className="mb-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-600">
-              ⚠ 정적 데이터 (API 오류)
+            <p className="mb-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+              Static Mode
             </p>
           )}
           <p className="mb-2 text-xs font-semibold text-slate-400">Domain Findings (JSON)</p>

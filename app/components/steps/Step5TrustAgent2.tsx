@@ -50,8 +50,8 @@ export default function Step5TrustAgent2({ scenario, ready, showNext, nextDisabl
       ) : (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           {source === "fallback" && (
-            <p className="md:col-span-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-600">
-              ⚠ 정적 데이터 (API 오류)
+            <p className="md:col-span-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+              Static Mode
             </p>
           )}
           <div className="rounded-xl border border-red-200 bg-white p-4">

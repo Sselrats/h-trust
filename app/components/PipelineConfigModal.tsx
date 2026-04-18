@@ -5,6 +5,8 @@ import type { PipelineModeConfig } from "./steps/types";
 
 type Props = {
   onConfirm: (config: PipelineModeConfig) => void;
+  initialConfig?: PipelineModeConfig;
+  onClose?: () => void;
 };
 
 export const DEFAULT_PIPELINE_CONFIG: PipelineModeConfig = {
@@ -74,8 +76,8 @@ function SectionHead({ title }: { title: string }) {
   );
 }
 
-export default function PipelineConfigModal({ onConfirm }: Props) {
-  const [config, setConfig] = useState<PipelineModeConfig>(DEFAULT_PIPELINE_CONFIG);
+export default function PipelineConfigModal({ onConfirm, initialConfig, onClose }: Props) {
+  const [config, setConfig] = useState<PipelineModeConfig>(initialConfig ?? DEFAULT_PIPELINE_CONFIG);
 
   function set2<K extends keyof PipelineModeConfig["step2"]>(
     k: K,
@@ -108,7 +110,19 @@ export default function PipelineConfigModal({ onConfirm }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-        <div className="text-center">
+        <div className="relative text-center">
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute -right-1 -top-1 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              aria-label="닫기"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">
             Financial AI Trust Infrastructure
           </p>
@@ -194,7 +208,7 @@ export default function PipelineConfigModal({ onConfirm }: Props) {
           onClick={() => onConfirm(config)}
           className="mt-6 w-full rounded-xl bg-brand-500 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
         >
-          데모 시작
+          {onClose ? "설정 저장" : "데모 시작"}
         </button>
       </div>
     </div>

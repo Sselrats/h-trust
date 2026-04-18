@@ -35,6 +35,7 @@ export default function Home() {
   const [demoMode, setDemoMode] = useState(false);
   const [demoIntervalMs, setDemoIntervalMs] = useState(1000);
   const [pipelineConfig, setPipelineConfig] = useState<PipelineModeConfig | null>(null);
+  const [showConfigModal, setShowConfigModal] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState<ScenarioKey | null>(null);
   const [currentStep, setCurrentStep] = useState<StepNumber>(1);
   const [focusStep, setFocusStep] = useState<StepNumber>(1);
@@ -408,12 +409,32 @@ export default function Home() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1320px] px-4 py-5 md:px-8 md:py-7">
-      {/* Startup config modal — shown until user confirms, hidden in demo mode */}
-      {!demoMode && !pipelineConfig && (
-        <PipelineConfigModal onConfirm={setPipelineConfig} />
+      {/* Startup config modal — shown until user confirms, or when re-opened via settings button */}
+      {!demoMode && (!pipelineConfig || showConfigModal) && (
+        <PipelineConfigModal
+          onConfirm={(config) => {
+            setPipelineConfig(config);
+            setShowConfigModal(false);
+          }}
+          initialConfig={pipelineConfig ?? undefined}
+          onClose={pipelineConfig ? () => setShowConfigModal(false) : undefined}
+        />
       )}
 
-      <header className="rounded-2xl border border-brand-200 bg-white/95 px-5 py-5 text-center shadow-card">
+      <header className="relative rounded-2xl border border-brand-200 bg-white/95 px-5 py-5 text-center shadow-card">
+        {!demoMode && pipelineConfig && (
+          <button
+            type="button"
+            onClick={() => setShowConfigModal(true)}
+            className="absolute right-4 top-4 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+            title="Pipeline 설정 변경"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+            </svg>
+            설정
+          </button>
+        )}
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">
           Financial AI Trust Infrastructure
         </p>

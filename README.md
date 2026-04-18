@@ -51,7 +51,7 @@ GEMINI_API_KEY=<Google AI Studio에서 발급>
 
 ## How to Use
 
-### 1. Pipeline Configuration (앱 시작 시)
+### 1. Pipeline Configuration
 
 앱을 열면 **Pipeline Configuration** 모달이 표시됩니다. 각 단계별로 AI 호출 여부를 선택합니다.
 
@@ -73,6 +73,8 @@ Step 5  Risks            AI / Static
 ```
 
 설정 후 **데모 시작** 버튼을 누르면 파이프라인이 시작됩니다. 시나리오를 바꿔도 설정은 유지됩니다.
+
+데모 진행 중 언제든 헤더 우측의 **설정** 버튼(⚙)으로 모달을 다시 열 수 있습니다. 현재 설정값이 유지된 채로 열리며, **설정 저장**을 누르면 즉시 반영됩니다. X 버튼으로 저장 없이 닫을 수 있습니다.
 
 ---
 

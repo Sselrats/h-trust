@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { runStep } from "./lib/pipeline";
 import { scenarioMap } from "./components/steps/data";
+import PipelineConfigModal, { DEFAULT_PIPELINE_CONFIG } from "./components/PipelineConfigModal";
 import Step1Scenario from "./components/steps/Step1Scenario";
 import Step2Submission from "./components/steps/Step2Submission";
 import Step3DomainAI from "./components/steps/Step3DomainAI";
@@ -11,7 +12,7 @@ import Step4TrustAgent1 from "./components/steps/Step4TrustAgent1";
 import Step5TrustAgent2 from "./components/steps/Step5TrustAgent2";
 import Step6HumanReview from "./components/steps/Step6HumanReview";
 import Step7Delivery from "./components/steps/Step7Delivery";
-import type { ScenarioKey, StepNumber, UserInput } from "./components/steps/types";
+import type { PipelineModeConfig, ScenarioKey, StepNumber, UserInput } from "./components/steps/types";
 import type { Step3Result, Step4Result, Step5Result } from "./lib/types";
 
 const cardMotion = {
@@ -33,9 +34,8 @@ const stepTitles: Record<StepNumber, string> = {
 export default function Home() {
   const [demoMode, setDemoMode] = useState(false);
   const [demoIntervalMs, setDemoIntervalMs] = useState(1000);
-  const [selectedScenario, setSelectedScenario] = useState<ScenarioKey | null>(
-    null,
-  );
+  const [pipelineConfig, setPipelineConfig] = useState<PipelineModeConfig | null>(null);
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioKey | null>(null);
   const [currentStep, setCurrentStep] = useState<StepNumber>(1);
   const [focusStep, setFocusStep] = useState<StepNumber>(1);
   const [demoIndex, setDemoIndex] = useState(0);
@@ -84,9 +84,11 @@ export default function Home() {
     });
   }, [demoMode, selectedScenario]);
 
+  // Demo mode: skip modal, use default config, set all steps ready
   useEffect(() => {
     if (!demoMode) return;
     clearTimers();
+    setPipelineConfig(DEFAULT_PIPELINE_CONFIG);
     setSelectedScenario("insurance");
     setCurrentStep(7);
     setFocusStep(1);
@@ -102,70 +104,124 @@ export default function Home() {
     return () => clearTimers();
   }, [clearTimers]);
 
+  // Config-aware step pipeline
   useEffect(() => {
-    if (demoMode || !selectedScenario) return;
+    if (demoMode || !selectedScenario || !pipelineConfig) return;
+    const s = scenarioMap[selectedScenario];
     let cancelled = false;
 
     if (currentStep === 3) {
       setDomainReady(false);
-      runStep(3, selectedScenario, {
-        userText: userInput?.text,
-        attachments: userInput?.attachments,
-      }).then((result) => {
+      const needsApi =
+        pipelineConfig.step3.snapshotMode === "ai" ||
+        pipelineConfig.step3.findingsMode === "ai" ||
+        pipelineConfig.step3.summaryMode === "ai";
+
+      if (!needsApi) {
         if (!cancelled) {
-          const r = result as { step: 3 } & Step3Result;
-          setStep3Result({ findings: r.findings, summary: r.summary, domainSnapshot: r.domainSnapshot, source: r.source, fallbackReason: r.fallbackReason });
+          setStep3Result({ findings: s.domainFindings, summary: "", source: "fallback" });
           setDomainReady(true);
         }
-      });
-    }
-    if (currentStep === 4) {
-      setAgent1Ready(false);
-      runStep(4, selectedScenario, { step3Findings: step3Result?.findings ?? [] }).then((result) => {
-        if (!cancelled) {
-          setStep4Result(result as Step4Result & { step: 4 });
-          setAgent1Ready(true);
-        }
-      });
-    }
-    if (currentStep === 5) {
-      setAgent2Ready(false);
-      runStep(5, selectedScenario, {
-        step4Draft: step4Result?.draft,
-        step4Citation: step4Result?.citation,
-      }).then((result) => {
-        if (!cancelled) {
-          const r = result as { step: 5 } & Step5Result;
-          setStep5Result({ risks: r.risks, scores: r.scores, source: r.source, fallbackReason: r.fallbackReason });
-          setAgent2Ready(true);
-        }
-      });
-    }
-    if (currentStep === 6) {
-      setHumanReady(false);
-      runStep(6, selectedScenario).then(() => { if (!cancelled) setHumanReady(true); });
+      } else {
+        runStep(3, selectedScenario, {
+          userText: userInput?.text,
+          attachments: userInput?.attachments,
+        }).then((result) => {
+          if (!cancelled) {
+            const r = result as { step: 3 } & Step3Result;
+            setStep3Result({
+              findings:
+                pipelineConfig.step3.findingsMode === "ai" ? r.findings : s.domainFindings,
+              summary:
+                pipelineConfig.step3.summaryMode === "ai" ? r.summary : "",
+              domainSnapshot:
+                pipelineConfig.step3.snapshotMode === "ai" ? r.domainSnapshot : undefined,
+              source: r.source,
+              fallbackReason: r.fallbackReason,
+            });
+            setDomainReady(true);
+          }
+        });
+      }
     }
 
-    return () => { cancelled = true; };
+    if (currentStep === 4) {
+      setAgent1Ready(false);
+      if (pipelineConfig.step4.draftMode === "static") {
+        if (!cancelled) {
+          setStep4Result({ draft: s.trustDraft, citation: s.citation, source: "fallback" });
+          setAgent1Ready(true);
+        }
+      } else {
+        runStep(4, selectedScenario, { step3Findings: step3Result?.findings ?? [] }).then(
+          (result) => {
+            if (!cancelled) {
+              setStep4Result(result as Step4Result & { step: 4 });
+              setAgent1Ready(true);
+            }
+          },
+        );
+      }
+    }
+
+    if (currentStep === 5) {
+      setAgent2Ready(false);
+      const needsApi =
+        pipelineConfig.step5.risksMode === "ai" || pipelineConfig.step5.scoresMode === "ai";
+
+      if (!needsApi) {
+        if (!cancelled) {
+          setStep5Result({ risks: s.redTeamRisks, scores: s.riskScores, source: "fallback" });
+          setAgent2Ready(true);
+        }
+      } else {
+        runStep(5, selectedScenario, {
+          step4Draft: step4Result?.draft,
+          step4Citation: step4Result?.citation,
+        }).then((result) => {
+          if (!cancelled) {
+            const r = result as { step: 5 } & Step5Result;
+            setStep5Result({
+              risks: pipelineConfig.step5.risksMode === "ai" ? r.risks : s.redTeamRisks,
+              scores: pipelineConfig.step5.scoresMode === "ai" ? r.scores : s.riskScores,
+              source: r.source,
+              fallbackReason: r.fallbackReason,
+            });
+            setAgent2Ready(true);
+          }
+        });
+      }
+    }
+
+    if (currentStep === 6) {
+      setHumanReady(false);
+      runStep(6, selectedScenario).then(() => {
+        if (!cancelled) setHumanReady(true);
+      });
+    }
+
+    return () => {
+      cancelled = true;
+    };
     // step3Result and step4Result are intentionally omitted from deps:
     // they are always set before currentStep advances, so the closure
     // captures fresh values when currentStep changes to 4 or 5.
+    // userInput and pipelineConfig are also stable at step-fire time.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep, demoMode, selectedScenario]);
+  }, [currentStep, demoMode, selectedScenario, pipelineConfig]);
 
   const isStepReady =
     demoMode ||
-    ((currentStep === 1 && !!selectedScenario) ||
-      (currentStep === 2 && submitted) ||
-      (currentStep === 3 && domainReady) ||
-      (currentStep === 4 && agent1Ready) ||
-      (currentStep === 5 && agent2Ready) ||
-      (currentStep === 6 && humanReady) ||
-      currentStep === 7);
+    (currentStep === 1 && !!selectedScenario) ||
+    (currentStep === 2 && submitted) ||
+    (currentStep === 3 && domainReady) ||
+    (currentStep === 4 && agent1Ready) ||
+    (currentStep === 5 && agent2Ready) ||
+    (currentStep === 6 && humanReady) ||
+    currentStep === 7;
 
   useEffect(() => {
     if (!demoMode) return;
-    // Keep Step 1 visible briefly before auto-rotating in demo mode.
     const startTimer = window.setTimeout(() => {
       const interval = window.setInterval(() => {
         setDemoIndex((prev) => prev + 1);
@@ -186,12 +242,8 @@ export default function Home() {
       if (stepScrollRef.current) {
         const targetStep = demoMode ? focusStep : currentStep;
         const target = demoMode
-          ? stepScrollRef.current.querySelector<HTMLElement>(
-              `[data-index=\"${demoIndex}\"]`,
-            )
-          : stepScrollRef.current.querySelector<HTMLElement>(
-              `[data-step=\"${targetStep}\"]`,
-            );
+          ? stepScrollRef.current.querySelector<HTMLElement>(`[data-index="${demoIndex}"]`)
+          : stepScrollRef.current.querySelector<HTMLElement>(`[data-step="${targetStep}"]`);
         if (target) {
           const container = stepScrollRef.current;
           const targetCenter = target.offsetLeft + target.offsetWidth / 2;
@@ -207,6 +259,7 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [currentStep, demoMode, focusStep, demoIndex]);
 
+  // Reset pipeline results but keep pipelineConfig — user shouldn't re-configure on scenario switch
   const resetFlow = (nextScenario: ScenarioKey) => {
     clearTimers();
     setSelectedScenario(nextScenario);
@@ -278,6 +331,7 @@ export default function Home() {
         <Step2Submission
           scenario={scenario}
           submitted={submitted}
+          inputMode={pipelineConfig?.step2.inputMode ?? "interactive"}
           onSubmit={(input) => {
             setUserInput(input);
             setSubmitted(true);
@@ -342,9 +396,7 @@ export default function Home() {
       );
     }
 
-    return (
-      <Step7Delivery scenario={scenario} onRestart={restartFromBeginning} />
-    );
+    return <Step7Delivery scenario={scenario} onRestart={restartFromBeginning} />;
   };
 
   const allSteps = [1, 2, 3, 4, 5, 6, 7] as StepNumber[];
@@ -356,6 +408,11 @@ export default function Home() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-[1320px] px-4 py-5 md:px-8 md:py-7">
+      {/* Startup config modal — shown until user confirms, hidden in demo mode */}
+      {!demoMode && !pipelineConfig && (
+        <PipelineConfigModal onConfirm={setPipelineConfig} />
+      )}
+
       <header className="rounded-2xl border border-brand-200 bg-white/95 px-5 py-5 text-center shadow-card">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">
           Financial AI Trust Infrastructure
@@ -364,8 +421,7 @@ export default function Home() {
           H-TRUST Demo
         </h1>
         <p className="mt-2 text-sm text-navy-700 md:text-base">
-          Domain AI는 판단을 만들고, TRUST Layer는 그 판단을 설명 가능하고 관리
-          가능한 결정으로 바꿉니다.
+          Domain AI는 판단을 만들고, TRUST Layer는 그 판단을 설명 가능하고 관리 가능한 결정으로 바꿉니다.
         </p>
       </header>
 
@@ -373,10 +429,7 @@ export default function Home() {
         <p className="mb-2 px-4 text-xs text-slate-500 md:px-8">
           좌우로 스크롤해 다음 Step을 확인해보세요.
         </p>
-        <div
-          ref={stepScrollRef}
-          className="hide-scrollbar overflow-x-auto pb-2"
-        >
+        <div ref={stepScrollRef} className="hide-scrollbar overflow-x-auto pb-2">
           <AnimatePresence mode="popLayout">
             <div className="flex w-max gap-3 px-4 md:px-8">
               {renderSteps.map((step, idx) => (

@@ -6,6 +6,24 @@ export type UserInput = {
   attachments: string[];
 };
 
+export type PipelineModeConfig = {
+  step2: {
+    inputMode: "interactive" | "static";
+  };
+  step3: {
+    snapshotMode: "ai" | "static";
+    findingsMode: "ai" | "static";
+    summaryMode: "ai" | "static";
+  };
+  step4: {
+    draftMode: "ai" | "static";
+  };
+  step5: {
+    risksMode: "ai" | "static";
+    scoresMode: "ai" | "static";
+  };
+};
+
 export type RiskSeverity = "CRITICAL" | "HIGH" | "MINOR";
 
 export type ScenarioData = {

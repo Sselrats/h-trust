@@ -3,11 +3,12 @@ import { buildStep3Prompt, parseStep3Response } from "../prompts/step3";
 import type { ScenarioData } from "../../components/steps/types";
 import type { Step3Result } from "../types";
 
-const mockScenario: Pick<ScenarioData, "title" | "userText" | "submissions"> = {
+const mockScenario: Pick<ScenarioData, "title"> = {
   title: "보험금 지급 심사",
-  userText: "보험금을 청구했는데 왜 이렇게 오래 걸리나요?",
-  submissions: ["진단서", "영수증"],
 };
+
+const mockUserText = "보험금을 청구했는데 왜 이렇게 오래 걸리나요?";
+const mockAttachments = ["진단서", "영수증"];
 
 const fallback: Step3Result = {
   findings: ["FALLBACK_FINDING"],
@@ -18,33 +19,33 @@ const fallback: Step3Result = {
 
 describe("buildStep3Prompt", () => {
   it("includes the scenario title", () => {
-    const prompt = buildStep3Prompt(mockScenario);
+    const prompt = buildStep3Prompt(mockScenario, mockUserText, mockAttachments);
     expect(prompt).toContain("보험금 지급 심사");
   });
 
   it("includes the user text", () => {
-    const prompt = buildStep3Prompt(mockScenario);
+    const prompt = buildStep3Prompt(mockScenario, mockUserText, mockAttachments);
     expect(prompt).toContain("보험금을 청구했는데 왜 이렇게 오래 걸리나요?");
   });
 
-  it("includes submissions when present", () => {
-    const prompt = buildStep3Prompt(mockScenario);
+  it("includes attachments when present", () => {
+    const prompt = buildStep3Prompt(mockScenario, mockUserText, mockAttachments);
     expect(prompt).toContain("진단서");
     expect(prompt).toContain("영수증");
   });
 
-  it("renders '없음' when submissions is empty array", () => {
-    const prompt = buildStep3Prompt({ ...mockScenario, submissions: [] });
+  it("renders '없음' when attachments is empty array", () => {
+    const prompt = buildStep3Prompt(mockScenario, mockUserText, []);
     expect(prompt).toContain("없음");
   });
 
-  it("renders '없음' when submissions is undefined", () => {
-    const prompt = buildStep3Prompt({ ...mockScenario, submissions: undefined as unknown as string[] });
+  it("renders '없음' when attachments is undefined-like (empty)", () => {
+    const prompt = buildStep3Prompt(mockScenario, mockUserText, undefined as unknown as string[]);
     expect(prompt).toContain("없음");
   });
 
   it("requests JSON output with findings and summary keys", () => {
-    const prompt = buildStep3Prompt(mockScenario);
+    const prompt = buildStep3Prompt(mockScenario, mockUserText, mockAttachments);
     expect(prompt).toContain('"findings"');
     expect(prompt).toContain('"summary"');
   });

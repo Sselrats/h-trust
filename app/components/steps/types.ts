@@ -1,6 +1,11 @@
 export type ScenarioKey = "insurance" | "loan" | "investment";
 export type StepNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
+export type UserInput = {
+  text: string;
+  attachments: string[];
+};
+
 export type RiskSeverity = "CRITICAL" | "HIGH" | "MINOR";
 
 export type ScenarioData = {

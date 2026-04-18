@@ -2,18 +2,18 @@ import type { ScenarioData } from "../../components/steps/types";
 import type { Step3Result } from "../types";
 
 export function buildStep3Prompt(
-  scenario: Pick<ScenarioData, "title" | "userText" | "submissions">
+  scenario: Pick<ScenarioData, "title">,
+  userText: string,
+  attachments: string[],
 ): string {
-  const submissionsText =
-    scenario.submissions && scenario.submissions.length > 0
-      ? scenario.submissions.join(", ")
-      : "없음";
+  const attachmentsText =
+    attachments && attachments.length > 0 ? attachments.join(", ") : "없음";
 
   return `당신은 금융 심사 전문가입니다. 아래 고객 문의를 분석하여 심사 발견사항을 도출하세요.
 
 시나리오: ${scenario.title}
-고객 문의: ${scenario.userText}
-제출 서류: ${submissionsText}
+고객 문의: ${userText}
+제출 서류: ${attachmentsText}
 
 지침:
 - findings: 최소 3개, 최대 5개 항목, 각 항목은 정확히 1문장

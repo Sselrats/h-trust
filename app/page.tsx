@@ -11,7 +11,7 @@ import Step4TrustAgent1 from "./components/steps/Step4TrustAgent1";
 import Step5TrustAgent2 from "./components/steps/Step5TrustAgent2";
 import Step6HumanReview from "./components/steps/Step6HumanReview";
 import Step7Delivery from "./components/steps/Step7Delivery";
-import type { ScenarioKey, StepNumber } from "./components/steps/types";
+import type { ScenarioKey, StepNumber, UserInput } from "./components/steps/types";
 import type { Step3Result, Step4Result, Step5Result } from "./lib/types";
 
 const cardMotion = {
@@ -47,6 +47,7 @@ export default function Home() {
   const [step4Result, setStep4Result] = useState<Step4Result | null>(null);
   const [step3Result, setStep3Result] = useState<Step3Result | null>(null);
   const [step5Result, setStep5Result] = useState<Step5Result | null>(null);
+  const [userInput, setUserInput] = useState<UserInput | null>(null);
 
   const timersRef = useRef<number[]>([]);
   const stepScrollRef = useRef<HTMLDivElement | null>(null);
@@ -107,7 +108,10 @@ export default function Home() {
 
     if (currentStep === 3) {
       setDomainReady(false);
-      runStep(3, selectedScenario).then((result) => {
+      runStep(3, selectedScenario, {
+        userText: userInput?.text,
+        attachments: userInput?.attachments,
+      }).then((result) => {
         if (!cancelled) {
           const r = result as { step: 3 } & Step3Result;
           setStep3Result({ findings: r.findings, summary: r.summary, source: r.source, fallbackReason: r.fallbackReason });
@@ -215,6 +219,7 @@ export default function Home() {
     setStep4Result(null);
     setStep3Result(null);
     setStep5Result(null);
+    setUserInput(null);
   };
 
   const restartFromBeginning = () => {
@@ -229,6 +234,7 @@ export default function Home() {
     setStep4Result(null);
     setStep3Result(null);
     setStep5Result(null);
+    setUserInput(null);
   };
 
   const nextDisabled = !isStepReady || currentStep >= 7;
@@ -272,7 +278,8 @@ export default function Home() {
         <Step2Submission
           scenario={scenario}
           submitted={submitted}
-          onSubmit={() => {
+          onSubmit={(input) => {
+            setUserInput(input);
             setSubmitted(true);
             setCurrentStep(3);
           }}

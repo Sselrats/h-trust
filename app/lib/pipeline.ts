@@ -11,7 +11,13 @@ export type StepResult =
 export async function runStep(
   step: 3 | 4 | 5 | 6,
   scenarioKey: ScenarioKey,
-  opts?: { step3Findings?: string[]; step4Draft?: string; step4Citation?: string }
+  opts?: {
+    userText?: string;
+    attachments?: string[];
+    step3Findings?: string[];
+    step4Draft?: string;
+    step4Citation?: string;
+  }
 ): Promise<StepResult> {
   const s = scenarioMap[scenarioKey];
 
@@ -26,7 +32,11 @@ export async function runStep(
       const res = await fetch("/api/pipeline/3", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scenarioKey }),
+        body: JSON.stringify({
+          scenarioKey,
+          userText: opts?.userText,
+          attachments: opts?.attachments,
+        }),
       });
       if (!res.ok) return { step: 3, ...fallback };
       const data = await res.json();

@@ -64,6 +64,10 @@ export async function POST(
 
   switch (step as ValidStep) {
     case "3": {
+      const userText = typeof body?.userText === "string" ? body.userText : s.userText;
+      const attachments = Array.isArray(body?.attachments)
+        ? (body.attachments as string[])
+        : s.submissions;
       const staticFallback: Step3Result = {
         findings: s.domainFindings,
         summary: "",
@@ -73,7 +77,7 @@ export async function POST(
       if (!apiKey) return NextResponse.json(staticFallback);
       try {
         const model = getModel(apiKey);
-        const prompt = buildStep3Prompt(s);
+        const prompt = buildStep3Prompt(s, userText, attachments);
         const text = await generateWithRetry(model, prompt);
         return NextResponse.json(parseStep3Response(text, staticFallback));
       } catch (err) {

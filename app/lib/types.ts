@@ -7,6 +7,7 @@ export type FallbackReason =
 export type Step3Result = {
   findings: string[];
   summary: string;
+  domainSnapshot?: Array<{ label: string; value: string }>;
   source: "ai" | "fallback";
   fallbackReason?: FallbackReason;
 };

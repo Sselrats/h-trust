@@ -8,11 +8,13 @@ type Props = {
   onNext: () => void;
   findings?: string[];
   summary?: string;
+  domainSnapshot?: Array<{ label: string; value: string }>;
   source?: "ai" | "fallback";
 };
 
-export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled, onNext, findings, summary, source }: Props) {
+export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled, onNext, findings, summary, domainSnapshot, source }: Props) {
   const displayFindings = findings ?? scenario.domainFindings;
+  const displaySnapshot = domainSnapshot ?? scenario.domainSnapshot;
 
   return (
     <article className="rounded-2xl border border-slate-300 bg-slate-950 p-5 text-white shadow-card">
@@ -50,7 +52,7 @@ export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled,
           <pre className="overflow-x-auto text-xs leading-relaxed text-slate-200">{`{
   "case_id": "${scenario.caseId}",
   "snapshot": {
-${scenario.domainSnapshot
+${displaySnapshot
   .map((item) => `    "${item.label}": "${item.value}"`)
   .join(",\n")}
   },

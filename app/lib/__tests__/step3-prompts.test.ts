@@ -44,21 +44,58 @@ describe("buildStep3Prompt", () => {
     expect(prompt).toContain("없음");
   });
 
-  it("requests JSON output with findings and summary keys", () => {
+  it("requests JSON output with snapshot, findings and summary keys", () => {
     const prompt = buildStep3Prompt(mockScenario, mockUserText, mockAttachments);
+    expect(prompt).toContain('"snapshot"');
     expect(prompt).toContain('"findings"');
     expect(prompt).toContain('"summary"');
+  });
+
+  it("instructs Fraud Score, Confidence, Attached Type labels", () => {
+    const prompt = buildStep3Prompt(mockScenario, mockUserText, mockAttachments);
+    expect(prompt).toContain("Fraud Score");
+    expect(prompt).toContain("Confidence");
+    expect(prompt).toContain("Attached Type");
   });
 });
 
 describe("parseStep3Response", () => {
-  it("returns ai source on valid JSON with findings and summary", () => {
-    const text = JSON.stringify({ findings: ["발견1", "발견2", "발견3"], summary: "요약입니다." });
+  const validSnapshot = [
+    { label: "Fraud Score", value: "0.73 (중간)" },
+    { label: "Confidence", value: "0.85" },
+    { label: "Attached Type", value: "text + document" },
+  ];
+
+  it("returns ai source with snapshot on fully valid JSON", () => {
+    const text = JSON.stringify({
+      snapshot: validSnapshot,
+      findings: ["발견1", "발견2", "발견3"],
+      summary: "요약입니다.",
+    });
     const result = parseStep3Response(text, fallback);
     expect(result.source).toBe("ai");
     expect(result.findings).toEqual(["발견1", "발견2", "발견3"]);
     expect(result.summary).toBe("요약입니다.");
+    expect(result.domainSnapshot).toEqual(validSnapshot);
     expect(result.fallbackReason).toBeUndefined();
+  });
+
+  it("returns ai source without domainSnapshot when snapshot is missing", () => {
+    const text = JSON.stringify({ findings: ["발견1", "발견2", "발견3"], summary: "요약입니다." });
+    const result = parseStep3Response(text, fallback);
+    expect(result.source).toBe("ai");
+    expect(result.domainSnapshot).toBeUndefined();
+  });
+
+  it("returns ai source without domainSnapshot when snapshot items have wrong shape", () => {
+    const text = JSON.stringify({
+      snapshot: [{ foo: "bar" }, { label: "Confidence" }],
+      findings: ["발견1", "발견2", "발견3"],
+      summary: "요약",
+    });
+    const result = parseStep3Response(text, fallback);
+    expect(result.source).toBe("ai");
+    expect(result.domainSnapshot).toBeUndefined();
   });
 
   it("returns fallback with empty_response on empty string", () => {
@@ -74,35 +111,36 @@ describe("parseStep3Response", () => {
   });
 
   it("returns fallback with missing_fields when findings is missing", () => {
-    const text = JSON.stringify({ summary: "요약" });
+    const text = JSON.stringify({ snapshot: validSnapshot, summary: "요약" });
     const result = parseStep3Response(text, fallback);
     expect(result.source).toBe("fallback");
     expect(result.fallbackReason).toBe("missing_fields");
   });
 
   it("returns fallback with missing_fields when findings is empty array", () => {
-    const text = JSON.stringify({ findings: [], summary: "요약" });
+    const text = JSON.stringify({ snapshot: validSnapshot, findings: [], summary: "요약" });
     const result = parseStep3Response(text, fallback);
     expect(result.source).toBe("fallback");
     expect(result.fallbackReason).toBe("missing_fields");
   });
 
   it("returns fallback with missing_fields when summary is missing", () => {
-    const text = JSON.stringify({ findings: ["발견1", "발견2", "발견3"] });
+    const text = JSON.stringify({ snapshot: validSnapshot, findings: ["발견1", "발견2", "발견3"] });
     const result = parseStep3Response(text, fallback);
     expect(result.source).toBe("fallback");
     expect(result.fallbackReason).toBe("missing_fields");
   });
 
   it("strips markdown code fences before parsing", () => {
-    const text = "```json\n{\"findings\":[\"발견1\",\"발견2\",\"발견3\"],\"summary\":\"요약\"}\n```";
+    const text = "```json\n" + JSON.stringify({ snapshot: validSnapshot, findings: ["발견1", "발견2", "발견3"], summary: "요약" }) + "\n```";
     const result = parseStep3Response(text, fallback);
     expect(result.source).toBe("ai");
     expect(result.findings).toEqual(["발견1", "발견2", "발견3"]);
+    expect(result.domainSnapshot).toEqual(validSnapshot);
   });
 
   it("returns fallback with missing_fields when findings contains non-strings", () => {
-    const text = JSON.stringify({ findings: [1, 2, 3], summary: "요약" });
+    const text = JSON.stringify({ snapshot: validSnapshot, findings: [1, 2, 3], summary: "요약" });
     const result = parseStep3Response(text, fallback);
     expect(result.source).toBe("fallback");
     expect(result.fallbackReason).toBe("missing_fields");

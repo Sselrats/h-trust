@@ -79,7 +79,16 @@ export async function POST(
         const model = getModel(apiKey);
         const prompt = buildStep3Prompt(s, userText, attachments);
         const text = await generateWithRetry(model, prompt);
-        return NextResponse.json(parseStep3Response(text, staticFallback));
+        const parsed = parseStep3Response(text, staticFallback);
+        if (parsed.source === "ai" && parsed.domainSnapshot) {
+          const ts = parsed.domainSnapshot.find((i) => i.label === "Timestamp");
+          if (ts) {
+            ts.value = new Date().toISOString();
+          } else {
+            parsed.domainSnapshot.push({ label: "Timestamp", value: new Date().toISOString() });
+          }
+        }
+        return NextResponse.json(parsed);
       } catch (err) {
         console.error("[Step3] Gemini error:", err);
         return NextResponse.json(staticFallback);

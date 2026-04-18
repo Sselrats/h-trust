@@ -297,6 +297,7 @@ export default function Home() {
           onNext={goToNextStep}
           findings={step3Result?.findings}
           summary={step3Result?.summary}
+          domainSnapshot={step3Result?.domainSnapshot}
           source={step3Result?.source}
         />
       );

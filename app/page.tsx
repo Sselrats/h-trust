@@ -114,7 +114,7 @@ export default function Home() {
       }).then((result) => {
         if (!cancelled) {
           const r = result as { step: 3 } & Step3Result;
-          setStep3Result({ findings: r.findings, summary: r.summary, source: r.source, fallbackReason: r.fallbackReason });
+          setStep3Result({ findings: r.findings, summary: r.summary, domainSnapshot: r.domainSnapshot, source: r.source, fallbackReason: r.fallbackReason });
           setDomainReady(true);
         }
       });

@@ -6,9 +6,16 @@ type Props = {
   showNext: boolean;
   nextDisabled: boolean;
   onNext: () => void;
+  findings?: string[];
+  summary?: string;
+  domainSnapshot?: Array<{ label: string; value: string }>;
+  source?: "ai" | "fallback";
 };
 
-export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled, onNext }: Props) {
+export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled, onNext, findings, summary, domainSnapshot, source }: Props) {
+  const displayFindings = findings ?? scenario.domainFindings;
+  const displaySnapshot = domainSnapshot ?? scenario.domainSnapshot;
+
   return (
     <article className="rounded-2xl border border-slate-300 bg-slate-950 p-5 text-white shadow-card">
       <div className="flex items-start justify-between gap-3">
@@ -36,17 +43,22 @@ export default function Step3DomainAI({ scenario, ready, showNext, nextDisabled,
         </div>
       ) : (
         <div className="mt-4 rounded-lg border border-slate-700 bg-black p-3">
+          {source === "fallback" && (
+            <p className="mb-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+              Static Mode
+            </p>
+          )}
           <p className="mb-2 text-xs font-semibold text-slate-400">Domain Findings (JSON)</p>
           <pre className="overflow-x-auto text-xs leading-relaxed text-slate-200">{`{
   "case_id": "${scenario.caseId}",
   "snapshot": {
-${scenario.domainSnapshot
+${displaySnapshot
   .map((item) => `    "${item.label}": "${item.value}"`)
   .join(",\n")}
   },
   "domain_findings": [
-${scenario.domainFindings.map((finding) => `    "${finding}"`).join(",\n")}
-  ]
+${displayFindings.map((f) => `    "${f}"`).join(",\n")}
+  ]${summary ? `,\n  "summary": "${summary}"` : ""}
 }`}</pre>
         </div>
       )}

@@ -6,9 +6,24 @@ type Props = {
   showNext: boolean;
   nextDisabled: boolean;
   onNext: () => void;
+  draft?: string;
+  citation?: string;
+  source?: "ai" | "fallback";
 };
 
-export default function Step4TrustAgent1({ scenario, ready, showNext, nextDisabled, onNext }: Props) {
+export default function Step4TrustAgent1({
+  scenario,
+  ready,
+  showNext,
+  nextDisabled,
+  onNext,
+  draft,
+  citation,
+  source,
+}: Props) {
+  const displayDraft = draft ?? scenario.trustDraft;
+  const displayCitation = citation ?? scenario.citation;
+
   return (
     <article className="rounded-2xl border border-[#3b82f6]/40 bg-gradient-to-b from-[#eff6ff] to-[#dbeafe] p-5 shadow-card">
       <div className="flex items-start justify-between gap-3">
@@ -37,9 +52,14 @@ export default function Step4TrustAgent1({ scenario, ready, showNext, nextDisabl
       ) : (
         <div className="mt-4 space-y-3">
           <div className="rounded-xl border border-[#3b82f6]/35 bg-white/90 p-4">
-            <p className="whitespace-pre-line text-sm leading-relaxed text-navy-800">{scenario.trustDraft}</p>
+            {source === "fallback" && (
+              <p className="mb-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+                Static Mode
+              </p>
+            )}
+            <p className="whitespace-pre-line text-sm leading-relaxed text-navy-800">{displayDraft}</p>
             <p className="mt-2 inline-flex rounded-full bg-[#dbeafe] px-2.5 py-1 text-xs font-semibold text-[#1d4ed8]">
-              Citation: {scenario.citation}
+              Citation: {displayCitation}
             </p>
           </div>
           <p className="text-xs font-semibold text-slate-600">* 내부 자료 기반 초안입니다. 최종 고객 전달 전 Red Team 점검이 필요합니다.</p>
